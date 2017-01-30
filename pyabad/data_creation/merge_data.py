@@ -10,7 +10,7 @@ def df_concat(sensor_num, subject_number):
     """
     Create a pandas dataframe for each subject and then concatenate to generate
     appropriate data structures for use in machine learning.
-    Inputs:
+
     :param sensor_num: The sensor number - either the mac subject number or a
     list of numbers.
     :type sensor_num: Union(int, float, list)
