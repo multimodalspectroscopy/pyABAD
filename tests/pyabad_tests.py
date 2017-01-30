@@ -1,5 +1,5 @@
 from nose.tools import *
-import AutoArtefact
+import pyabad
 
 
 def setup():
