@@ -1,0 +1,9 @@
+nose
+sphinx
+numpy
+tables
+pandas
+scikit-learn
+matplotlib
+scipy
+sampen
