@@ -1,3 +1,12 @@
+"""
+.. module:: merge_data
+   :platform: Unix, Windows
+   :synopsis: This module contains the :func:`merge_data.df_concat`.
+
+.. moduleauthor:: Joshua Russell-Buckland <joshua.russell-buckland.15@ucl.ac.uk>
+
+
+"""
 import pandas as pd
 import data_creation as dc
 import copy
@@ -11,10 +20,10 @@ def df_concat(sensor_num, subject_number):
     Create a pandas dataframe for each subject and then concatenate to generate
     appropriate data structures for use in machine learning.
 
-    :param sensor_num: The sensor number - either the mac subject number or a
-    list of numbers.
-    :type sensor_num: Union(int, float, list)
+    :param int sensor_num: The sensor number.
 
+    :param subject_number: either the max subject number or a list of numbers.
+    :type subject_number: list or int or float
     """
     df_list = []
 
