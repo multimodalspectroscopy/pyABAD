@@ -17,24 +17,26 @@ import scipy
 
 from sampen import sampen2
 
+
 # Function to trace feature progress.
-def percentage_coroutine(to_process, print_on_percent = 0.05):
+def percentage_coroutine(to_process, print_on_percent=0.05):
     print("Starting progress percentage monitor \n")
 
     processed = 0
     count = 0
-    print_count = to_process*print_on_percent
+    print_count = to_process * print_on_percent
     while True:
         yield
         processed += 1
         count += 1
         if (count >= print_count):
             count = 0
-            pct = (float(processed)/float(to_process))
+            pct = (float(processed) / float(to_process))
 
             print("{:.0%} finished".format(pct))
 
-def trace_progress(func, progress = None):
+
+def trace_progress(func, progress=None):
     def callf(*args, **kwargs):
         if (progress is not None):
             progress.send(None)
@@ -42,6 +44,7 @@ def trace_progress(func, progress = None):
         return func(*args, **kwargs)
 
     return callf
+
 
 def ApEn(U, m, r):
     """
@@ -56,12 +59,14 @@ def ApEn(U, m, r):
 
     def _phi(m):
         x = [[U[j] for j in range(i, i + m - 1 + 1)] for i in range(N - m + 1)]
-        C = [len([1 for x_j in x if _maxdist(x_i, x_j) <= r]) / (N - m + 1.0) for x_i in x]
+        C = [len([1 for x_j in x if _maxdist(x_i, x_j) <= r]) /
+             (N - m + 1.0) for x_i in x]
         return (N - m + 1.0)**(-1) * sum(np.log(C))
 
     N = len(U)
 
     return abs(_phi(m + 1) - _phi(m))
+
 
 def SampEn(X, verbose=False):
     """
@@ -75,14 +80,14 @@ def SampEn(X, verbose=False):
     return sampen[2][1]
 
 
-
 def AUC(X, coroutine):
     """
     Function to return the area under a spectra
     :param X: Pandas dataframe of raw sensor data.
     :return: Pandas series of AUC for each spectra.
     """
-    auc = X.apply(trace_progress(np.trapz, progress=coroutine),raw=True,axis=1)
+    auc = X.apply(trace_progress(
+        np.trapz, progress=coroutine), raw=True, axis=1)
     scaler = preprocessing.MinMaxScaler()
     print('Normalising AUC')
     return scaler.fit_transform(auc.reshape(-1, 1))
@@ -101,11 +106,12 @@ def average_PSD(X_origin, plot=False):
     yf = sp_fft.rfft(X)
     xf = sp_fft.rfftfreq(N)
     psd = np.abs(yf)**2
-    PSD = metrics.auc(xf[:N//100], psd[:N//100])/metrics.auc(xf, psd)
+    PSD = metrics.auc(xf[:N // 100], psd[:N // 100]) / metrics.auc(xf, psd)
     if plot:
         return xf, yf
     else:
         return PSD
+
 
 def autocorr(X):
     """
@@ -116,32 +122,36 @@ def autocorr(X):
     return X.apply(lambda x: x.autocorr(lag=1), axis=1)
 
 
-def feature_engineering(X,y,groups):
+def feature_engineering(X, y, groups):
     co2 = percentage_coroutine(len(y))
     next(co2)
     features = pd.DataFrame()
     features['Artefact'] = y.values
     features['Subject'] = groups.values
     print('Calculating AUC')
-    features['AUC']= AUC(X, co2)
+    features['AUC'] = AUC(X, co2)
     co2 = percentage_coroutine(len(y))
     next(co2)
     print('Calculating PSD')
-    features['PSD'] = X.apply(trace_progress(average_PSD, progress=co2), raw=True, axis=1)
+    features['PSD'] = X.apply(trace_progress(
+        average_PSD, progress=co2), raw=True, axis=1)
     co2 = percentage_coroutine(len(y))
     next(co2)
     print('Calculating AutoCorr')
-    features['AutoCorr'] = X.apply(trace_progress(lambda x: x.autocorr(lag=1), progress=co2), axis=1)
+    features['AutoCorr'] = X.apply(trace_progress(
+        lambda x: x.autocorr(lag=1), progress=co2), axis=1)
     co2 = percentage_coroutine(len(y))
     next(co2)
     print('Calculating SampEn')
-    features['SampEn'] = X.apply(trace_progress(SampEn, progress=co2),raw=True,axis=1)
+    features['SampEn'] = X.apply(trace_progress(
+        SampEn, progress=co2), raw=True, axis=1)
 
     return features
 
+
 def data_separation(df):
     """
-    Funciton to split a dataframe up into X, y and groups
+    Function to split a dataframe up into X, y and groups
     :param df: Dataframe to split. Must have Artefacts and Subject columns
     :return: (X, y, groups)
     """
@@ -149,6 +159,7 @@ def data_separation(df):
     y = df['Artefact']
     groups = df['Subject']
     return(X, y, groups)
+
 
 def feature_creation(df):
     X, y, groups = data_separation(df)
@@ -160,13 +171,16 @@ def feature_creation(df):
 
 def test_train_split(df):
     """
-    Function to split a dataframe of engineered features by subject and output required Dataframes.
+    Function to split a dataframe of engineered features by subject and output
+    required Dataframes.
     :param df: Input dataframe from csv file.
-    :return: list of dicts of form [[train_data],[test_data]], with data being X,  y, groups.
+    :return: list of dicts of form [[train_data],[test_data]], with data being
+    X,  y, groups.
     """
     rand_state = np.random.randint(100)
     X, y, groups = data_separation(df)
-    train_idx, test_idx = next(GroupShuffleSplit(n_splits=10, random_state=rand_state).split(X, y, groups))
+    train_idx, test_idx = next(GroupShuffleSplit(
+        n_splits=10, random_state=rand_state).split(X, y, groups))
 
     X_train = X.iloc[train_idx]
     y_train = y.iloc[train_idx]
@@ -176,14 +190,17 @@ def test_train_split(df):
     y_true = y.iloc[test_idx]
     groups_test = groups.iloc[test_idx]
 
-    return [{'X':X_train, 'y':y_train, 'groups': groups_train},{'X': X_test, 'y':y_true, 'groups':groups_test}]
+    return [{'X': X_train, 'y': y_train, 'groups': groups_train},
+            {'X': X_test, 'y': y_true, 'groups': groups_test}]
 
 
-def motion_light_split(features, *, light=False, motion=False):
+def motion_light_split(features, light=False, motion=False):
     if light:
-        new_features = features.drop(features[features['Artefact'].isin({1, 2, 3, 4})].index, axis=0)
+        new_features = features.drop(
+            features[features['Artefact'].isin({1, 2, 3, 4})].index, axis=0)
     elif motion:
-        new_features = features.drop(features[features['Artefact'].isin({5, 6})].index, axis=0)
+        new_features = features.drop(
+            features[features['Artefact'].isin({5, 6})].index, axis=0)
     else:
         print("No split required. \n")
         return None
@@ -208,10 +225,12 @@ def roc_area(clf, X_test, y_test, n_classes):
         roc_auc[i] = metrics.auc(fpr[i], tpr[i])
 
     # Compute micro-average ROC curve and ROC area
-    fpr["micro"], tpr["micro"], _ = metrics.roc_curve(y_test.ravel(), y_score.ravel())
+    fpr["micro"], tpr["micro"], _ = metrics.roc_curve(
+        y_test.ravel(), y_score.ravel())
     roc_auc["micro"] = metrics.auc(fpr["micro"], tpr["micro"])
 
-    return fpr,tpr,roc_auc
+    return fpr, tpr, roc_auc
+
 
 def classification(train):
     """
@@ -220,23 +239,24 @@ def classification(train):
     :return: False positive rate, true positive rate and AUROC
     """
 
-
     rand_state = np.random.randint(100)
 
-    train_idx, test_idx = next(GroupShuffleSplit(n_splits=10, random_state=rand_state).split(train['X'],
-                                                                                             train['y'],
-                                                                                             train['groups']))
+    train_idx, test_idx = next(GroupShuffleSplit(n_splits=10,
+                                                 random_state=rand_state).
+                               split(train['X'], train['y'], train['groups']))
 
     # Binarize the training data
     y = preprocessing.label_binarize(train['y'], classes=list(set(train['y'])))
     n_classes = y.shape[1]
 
-    classifier = multiclass.OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
-                                             random_state=rand_state))
+    classifier = multiclass.OneVsRestClassifier(svm.SVC(kernel='linear',
+                                                        probability=True,
+                                                        random_state=rand_state))
 
     classifier.fit(train['X'].iloc[train_idx], y[train_idx])
 
-    fpr, tpr, auroc = roc_area(classifier, train['X'].iloc[test_idx], y[test_idx], n_classes)
+    fpr, tpr, auroc = roc_area(classifier, train['X'].iloc[
+                               test_idx], y[test_idx], n_classes)
     # First aggregate all false positive rates
     all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
 
@@ -254,9 +274,10 @@ def classification(train):
 
     return fpr, tpr, auroc, n_classes
 
-def ROC_plot(fpr,tpr,auroc, n_classes, datetime, target_names):
+
+def ROC_plot(fpr, tpr, auroc, n_classes, datetime, target_names):
     # Plot all ROC curves
-    lw=2
+    lw = 2
     plt.figure()
     plt.plot(fpr["micro"], tpr["micro"],
              label='micro-average ROC curve (area = {0:0.2f})'
@@ -270,7 +291,6 @@ def ROC_plot(fpr,tpr,auroc, n_classes, datetime, target_names):
 
     colors = cycle(sns.color_palette("husl", n_classes))
 
-
     for i, color in zip(range(n_classes), colors):
         plt.plot(fpr[i], tpr[i], color=color, lw=lw,
                  label='ROC curve of class {0} (area = {1:0.2f})'
@@ -283,35 +303,35 @@ def ROC_plot(fpr,tpr,auroc, n_classes, datetime, target_names):
     plt.ylabel('True Positive Rate')
     plt.title('Comparison of AUROC scores for each class of Artefact')
     plt.legend(loc="lower right")
-    plt.savefig("../figures/ROC_Curve_%s"%datetime)
-    #plt.show()
+    plt.savefig("../figures/ROC_Curve_%s" % datetime)
+    # plt.show()
 
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     from datetime import datetime
     df_7 = pd.read_csv('../data/raw_sensor_7.csv')
     df_13 = pd.read_csv('../data/raw_sensor_13.csv')
     # http://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
 
     target_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown','Ambient Light', 'Torch Light']
+                    'Frown', 'Ambient Light', 'Torch Light']
     features_7 = feature_creation(df_7)
     dt = datetime.now()
     date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    features_7.to_csv('../data/df_7/engineeredfeatures%s.csv'%(date), index=False)
+    features_7.to_csv('../data/df_7/engineeredfeatures%s.csv' %
+                      (date), index=False)
     test_train_data = test_train_split(features_7)
     fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    ROC_plot(fpr,tpr,auroc,n_classes,date, target_names)
+    ROC_plot(fpr, tpr, auroc, n_classes, date, target_names)
 
     features_13 = feature_creation(df_13)
     dt = datetime.now()
     date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    features_13.to_csv('../data/df_13/engineeredfeatures%s.csv' % (date), index=False)
+    features_13.to_csv('../data/df_13/engineeredfeatures%s.csv' %
+                       (date), index=False)
     test_train_data = test_train_split(features_13)
     fpr, tpr, auroc, n_classes = classification(test_train_data[0])
     ROC_plot(fpr, tpr, auroc, n_classes, date, target_names)
-
 
     motion_7 = feature_creation(motion_light_split(df_7, motion=True))
     light_7 = feature_creation(motion_light_split(df_7, light=True))
