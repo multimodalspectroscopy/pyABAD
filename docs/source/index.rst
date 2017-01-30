@@ -10,7 +10,6 @@ Welcome to pyABAD's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
    pyabad
    pyabad.data_creation
 
