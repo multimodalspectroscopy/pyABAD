@@ -8,7 +8,7 @@ HDF_FILE = '../../data/subject_data.h5'
 
 def df_concat(sensor_num, subject_number):
     """
-    Crate a pandas dataframe for each subject and then concatenate to generate
+    Create a pandas dataframe for each subject and then concatenate to generate
     appropriate data structures for use in machine learning.
     Inputs:
     :param sensor_num: The sensor number - either the mac subject number or a
