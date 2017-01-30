@@ -10,6 +10,7 @@ Welcome to pyABAD's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   data_creation
 
 Indices and tables
 ==================
