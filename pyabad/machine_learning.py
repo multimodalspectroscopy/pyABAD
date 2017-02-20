@@ -72,7 +72,7 @@ def motion_light_split(features, artefact=None):
             features[features['Artefact'].isin({5, 6})].index, axis=0)
     else:
         print("No split required. \n")
-        return None
+        new_features=features
 
     return new_features
 

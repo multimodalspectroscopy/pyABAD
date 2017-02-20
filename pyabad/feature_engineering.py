@@ -40,10 +40,10 @@ def feature_engineering(X, y, groups):
     print('Calculating AUC')
     auc=X.apply(trace_progress(
         np.trapz, progress=co2), raw=True, axis=1)
-    scaler = preprocessing.MinMaxScaler()
-    print('Normalising AUC')
-    scaled_auc = scaler.fit_transform(auc.reshape(-1, 1))
-    features['AUC'] = scaled_auc
+    #scaler = preprocessing.MinMaxScaler()
+    #print('Normalising AUC')
+    #scaled_auc = scaler.fit_transform(auc.reshape(-1, 1))
+    features['AUC'] = auc
 
     co2 = percentage_coroutine(len(y))
     next(co2)
