@@ -1,73 +1,48 @@
 import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 import pyabad.machine_learning as ML
-
-def parallel_split(df, n_workers):
-    x = [df.shape[0]//n_workers*k for k in range(n_workers)]
-    x.append(df.shape[0])
-    return [df[x[k]:x[k+1]] for k in range(n_workers)]
+from datetime import datetime
+import os
+DATAPATH = os.path.join('.','data')
 
 
-if __name__ == '__main__':
-    from datetime import datetime
+def artefact_name(x):
+    return {"light":"Light","motion":"Motion",None:"All"}.get(x, 'INVALID')
+
+
+def configure_pipeline(sensor_num, artefact_type=None ):
+    dt = datetime.now()
+    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
+    config = {"artefact_type": artefact_type,
+              "date":date,
+              "sensor_num":sensor_num,
+              'target_name':['Control', 'Horizontal', 'Vertical', 'Pressure',
+                    'Frown', 'Ambient Light', 'Torch Light']}
+    return config
+
+def pipeline(df, config):
+    features = ML.feature_creation(ML.motion_light_split(df, config['artefact_type']))
+    artefact = artefact_name(config['artefact_type'])
+    features.to_csv(os.path.join(DATAPATH,
+                                 'df_%s' % config['sensor_num'],
+                                 'serial_features_%s_%s.csv' % (config['sensor_num'], artefact)))
+    split_data = ML.test_train_split(features)
+    fpr, tpr, auroc, n_classes, clf = ML.classification(split_data[0])
+    ML.ROC_plot(fpr, tpr, auroc, n_classes, config['date'], config['target_names'], config['sensor_num'], 'Training')
+    fpr, tpr, auroc, n_classes = ML.final_test(split_data[1],clf)
+    ML.ROC_plot(fpr, tpr, auroc, n_classes, config['date'], config['target_names'], config['sensor_num'], 'Test')
+
+    return True
+
+
+if __name__=='__main__':
     df_7 = pd.read_csv('data/raw_sensor_7.csv')
-    #df_13 = pd.read_csv('../data/raw_sensor_13.csv')
-    # http://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
+    df_13 = pd.read_csv('data/raw_sensor_13.csv')
 
-    target_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown', 'Ambient Light', 'Torch Light']
-    features_7 = ML.feature_creation(df_7)
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    features_7.to_csv('../data/df_7/engineeredfeatures%s.csv' %
-                      (date), index=False)
-    #test_train_data = ML.test_train_split(features_7)
-    #fpr, tpr, auroc, n_classes = ML.classification(test_train_data[0])
-    #ML.ROC_plot(fpr, tpr, auroc, n_classes, date, target_names)
-    """
-    features_13 = feature_creation(df_13)
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    features_13.to_csv('../data/df_13/engineeredfeatures%s.csv' %
-                       (date), index=False)
-    test_train_data = test_train_split(features_13)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    ROC_plot(fpr, tpr, auroc, n_classes, date, target_names)
+    config = configure_pipeline(7)
+    pipeline(df_7, config)
 
-    motion_7 = feature_creation(motion_light_split(df_7, motion=True))
-    light_7 = feature_creation(motion_light_split(df_7, light=True))
-    test_train_data = test_train_split(motion_7)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    motion_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, motion_names)
+    config = configure_pipeline(7, artefact_type='light')
+    pipeline(df_7, config)
 
-    test_train_data = test_train_split(light_7)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    light_names = ['Control', 'Ambient Light', 'Torch Light']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, light_names)
-
-    motion_13 = feature_creation(motion_light_split(df_13, motion=True))
-    light_13 = feature_creation(motion_light_split(df_13, light=True))
-
-    test_train_data = test_train_split(motion_13)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    motion_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, motion_names)
-
-    test_train_data = test_train_split(light_13)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    light_names = ['Control', 'Ambient Light', 'Torch Light']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, light_names)
-    """
+    config = configure_pipeline(7, artefact_type='motion')
+    pipeline(df_7, config)
