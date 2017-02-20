@@ -5,7 +5,7 @@ import itertools
 import warnings
 import argparse
 import pandas as pd
-
+import os
 
 class SubjectData:
     """A class to collate, clean and label artefact data.
@@ -54,7 +54,7 @@ class SubjectData:
 
     def label_raw_data(self):
         wavelengths = []
-        with open('./wavelengths.txt', 'r') as f:
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)),'wavelengths.txt'), 'r') as f:
             reader = csv.reader(f)
             for row in reader:
                 wavelengths.append(row[0])

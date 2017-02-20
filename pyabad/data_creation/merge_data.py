@@ -8,11 +8,15 @@
 
 """
 import pandas as pd
-import data_creation as dc
+from . import data_creation as dc
+import os
+from .. import utility as utility
 import copy
 
 
-HDF_FILE = '../../data/subject_data.h5'
+BASEDIR = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+assert utility.base_dir_check(BASEDIR, "pyABAD", verbose=True), "incorrect BASEDIR in merge_data"
+HDF_FILE = os.path.join(BASEDIR,'data','subject_data.h5')
 
 
 def df_concat(sensor_num, subject_number):
@@ -28,9 +32,9 @@ def df_concat(sensor_num, subject_number):
     df_list = []
 
     if type(subject_number) == int:
-        subject_list = list(range(1, subject_number))
+        subject_list = list(range(1, subject_number+1))
     elif type(subject_number) == float:
-        subject_list = list(range(1, int(round(subject_number))))
+        subject_list = list(range(1, int(round(subject_number))+1))
     elif type(subject_number) == list:
         subject_list = subject_number
     else:
@@ -46,12 +50,18 @@ def df_concat(sensor_num, subject_number):
 
     all_df = pd.concat(df_list)
     print('\nWriting data to file\n')
-    all_df.to_csv('../../data/raw_sensor_%s.csv' % sensor_num,
+    all_df.to_csv(os.path.join(BASEDIR,'data','raw_sensor_%s.csv' % sensor_num),
                   index=False)
     print('\nraw_sensor_%s.csv written to file.\n' % sensor_num)
     return None
 
 
-if __name__ == '__main__':
-    df_concat(7)
-    df_concat(13)
+def merge_main(sensor_num, hdf_file=HDF_FILE):
+    """
+    Main function to call in order to merge hdf into csv
+    :param sensor_num: Sensor number
+    :param hdf_file: hdf file location. (Default: data/subject_data.h5)
+    :return: None - will write to file
+    """
+    df_concat(sensor_num, 8)
+    return None

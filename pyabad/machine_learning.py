@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 from itertools import cycle
-import math
 import seaborn as sns
 
 from sklearn.model_selection import GroupShuffleSplit
@@ -12,142 +11,9 @@ from sklearn import preprocessing
 from sklearn import multiclass
 from sklearn import svm
 
-import scipy.fftpack as sp_fft
 import scipy
 
-from sampen import sampen2
-
-
-# Function to trace feature progress.
-def percentage_coroutine(to_process, print_on_percent=0.05):
-    print("Starting progress percentage monitor \n")
-
-    processed = 0
-    count = 0
-    print_count = to_process * print_on_percent
-    while True:
-        yield
-        processed += 1
-        count += 1
-        if (count >= print_count):
-            count = 0
-            pct = (float(processed) / float(to_process))
-
-            print("{:.0%} finished".format(pct))
-
-
-def trace_progress(func, progress=None):
-    def callf(*args, **kwargs):
-        if (progress is not None):
-            progress.send(None)
-
-        return func(*args, **kwargs)
-
-    return callf
-
-
-def ApEn(U, m, r):
-    """
-    Function for approximate entropy as per Wikipedia
-    :param U: Time series of data
-    :param m: Length of compared run of data (typically 2)
-    :param r: Filtering level
-    :return: Approximate entropy value for the time series
-    """
-    def _maxdist(x_i, x_j):
-        return max([abs(ua - va) for ua, va in zip(x_i, x_j)])
-
-    def _phi(m):
-        x = [[U[j] for j in range(i, i + m - 1 + 1)] for i in range(N - m + 1)]
-        C = [len([1 for x_j in x if _maxdist(x_i, x_j) <= r]) /
-             (N - m + 1.0) for x_i in x]
-        return (N - m + 1.0)**(-1) * sum(np.log(C))
-
-    N = len(U)
-
-    return abs(_phi(m + 1) - _phi(m))
-
-
-def SampEn(X, verbose=False):
-    """
-    Implementation of Sample Entropy using sampen package
-    :param X: Numpy array of spectra
-    :return: Sample Entropy float
-    """
-    sampen = sampen2(X, r=10)
-    if verbose:
-        print(sampen)
-    return sampen[2][1]
-
-
-def AUC(X, coroutine):
-    """
-    Function to return the area under a spectra
-    :param X: Pandas dataframe of raw sensor data.
-    :return: Pandas series of AUC for each spectra.
-    """
-    auc = X.apply(trace_progress(
-        np.trapz, progress=coroutine), raw=True, axis=1)
-    scaler = preprocessing.MinMaxScaler()
-    print('Normalising AUC')
-    return scaler.fit_transform(auc.reshape(-1, 1))
-
-
-def average_PSD(X_origin, plot=False):
-    """
-    Power spectral density of the bottom 1% of frequencies
-    as a fraction of the whole.
-    :param X_origin: Pandas dataframe of spectra data
-    :param plot: Boolean stating whether FFT is to be plotted or not
-    :return: x,y of the fourier if plotting, PSD if not
-    """
-    X = copy.deepcopy(X_origin)
-    N = X.shape[0]
-    yf = sp_fft.rfft(X)
-    xf = sp_fft.rfftfreq(N)
-    psd = np.abs(yf)**2
-    PSD = metrics.auc(xf[:N // 100], psd[:N // 100]) / metrics.auc(xf, psd)
-    if plot:
-        return xf, yf
-    else:
-        return PSD
-
-
-def autocorr(X):
-    """
-    Function to find autocorrelation values of spectra data.
-    :param X: Dataframe of raw spectra data
-    :return: Time series of autocorrelation data
-    """
-    return X.apply(lambda x: x.autocorr(lag=1), axis=1)
-
-
-def feature_engineering(X, y, groups):
-    co2 = percentage_coroutine(len(y))
-    next(co2)
-    features = pd.DataFrame()
-    features['Artefact'] = y.values
-    features['Subject'] = groups.values
-    print('Calculating AUC')
-    features['AUC'] = AUC(X, co2)
-    co2 = percentage_coroutine(len(y))
-    next(co2)
-    print('Calculating PSD')
-    features['PSD'] = X.apply(trace_progress(
-        average_PSD, progress=co2), raw=True, axis=1)
-    co2 = percentage_coroutine(len(y))
-    next(co2)
-    print('Calculating AutoCorr')
-    features['AutoCorr'] = X.apply(trace_progress(
-        lambda x: x.autocorr(lag=1), progress=co2), axis=1)
-    co2 = percentage_coroutine(len(y))
-    next(co2)
-    print('Calculating SampEn')
-    features['SampEn'] = X.apply(trace_progress(
-        SampEn, progress=co2), raw=True, axis=1)
-
-    return features
-
+from .feature_engineering import feature_engineering
 
 def data_separation(df):
     """
@@ -194,11 +60,14 @@ def test_train_split(df):
             {'X': X_test, 'y': y_true, 'groups': groups_test}]
 
 
-def motion_light_split(features, light=False, motion=False):
-    if light:
+def motion_light_split(features, artefact=None):
+    if type(artefact)==str:
+        artefact = artefact.lower()
+    assert artefact in ['light', 'motion', None], 'Please provide a valid artefact type'
+    if artefact=='light':
         new_features = features.drop(
             features[features['Artefact'].isin({1, 2, 3, 4})].index, axis=0)
-    elif motion:
+    elif artefact=='motion':
         new_features = features.drop(
             features[features['Artefact'].isin({5, 6})].index, axis=0)
     else:
@@ -235,7 +104,7 @@ def roc_area(clf, X_test, y_test, n_classes):
 def classification(train):
     """
     Function to classify the training data output from train_test_split
-    :param test_train_data: Output from test_train_split function
+    :param train: train output from test_train_split function
     :return: False positive rate, true positive rate and AUROC
     """
 
@@ -272,10 +141,39 @@ def classification(train):
     tpr["macro"] = mean_tpr
     auroc["macro"] = metrics.auc(fpr["macro"], tpr["macro"])
 
+    return fpr, tpr, auroc, n_classes, classifier
+
+
+def final_test(test, classifier):
+    """
+    Function to classify the test data output from train_test_split
+    :param test: test output from train_test_split
+    :param classifier: classifier from the classification method
+    :return: False positive rate, true positive rate and AUROC
+    """
+
+    y = preprocessing.label_binarize(test['y'], classes=list(set(test['y'])))
+    n_classes = y.shape[1]
+    fpr, tpr, auroc = roc_area(classifier, test['X'], y, n_classes)
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += scipy.interp(all_fpr, fpr[i], tpr[i])
+
+    # Finally average it and compute AUC
+    mean_tpr /= n_classes
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    auroc["macro"] = metrics.auc(fpr["macro"], tpr["macro"])
+
     return fpr, tpr, auroc, n_classes
 
 
-def ROC_plot(fpr, tpr, auroc, n_classes, datetime, target_names):
+def ROC_plot(fpr, tpr, auroc, n_classes, datetime, target_names, sensor_num, split_type):
     # Plot all ROC curves
     lw = 2
     plt.figure()
@@ -301,69 +199,9 @@ def ROC_plot(fpr, tpr, auroc, n_classes, datetime, target_names):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Comparison of AUROC scores for each class of Artefact')
+    plt.title('Comparison of AUROC scores for each class of Artefact - Sensor %s (%s)' % (sensor_num, split_type))
     plt.legend(loc="lower right")
-    plt.savefig("../figures/ROC_Curve_%s" % datetime)
+    plt.savefig("figures/ROC_Curve_%s" % datetime)
     # plt.show()
 
 
-if __name__ == '__main__':
-    from datetime import datetime
-    df_7 = pd.read_csv('../data/raw_sensor_7.csv')
-    df_13 = pd.read_csv('../data/raw_sensor_13.csv')
-    # http://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
-
-    target_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown', 'Ambient Light', 'Torch Light']
-    features_7 = feature_creation(df_7)
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    features_7.to_csv('../data/df_7/engineeredfeatures%s.csv' %
-                      (date), index=False)
-    test_train_data = test_train_split(features_7)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    ROC_plot(fpr, tpr, auroc, n_classes, date, target_names)
-
-    features_13 = feature_creation(df_13)
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    features_13.to_csv('../data/df_13/engineeredfeatures%s.csv' %
-                       (date), index=False)
-    test_train_data = test_train_split(features_13)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    ROC_plot(fpr, tpr, auroc, n_classes, date, target_names)
-
-    motion_7 = feature_creation(motion_light_split(df_7, motion=True))
-    light_7 = feature_creation(motion_light_split(df_7, light=True))
-    test_train_data = test_train_split(motion_7)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    motion_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, motion_names)
-
-    test_train_data = test_train_split(light_7)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    light_names = ['Control', 'Ambient Light', 'Torch Light']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, light_names)
-
-    motion_13 = feature_creation(motion_light_split(df_13, motion=True))
-    light_13 = feature_creation(motion_light_split(df_13, light=True))
-
-    test_train_data = test_train_split(motion_13)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    motion_names = ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                    'Frown']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, motion_names)
-
-    test_train_data = test_train_split(light_13)
-    fpr, tpr, auroc, n_classes = classification(test_train_data[0])
-    light_names = ['Control', 'Ambient Light', 'Torch Light']
-    dt = datetime.now()
-    date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
-    ROC_plot(fpr, tpr, auroc, n_classes, date, light_names)
