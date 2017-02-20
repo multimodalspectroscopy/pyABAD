@@ -1,7 +1,8 @@
 import os
 import argparse
 from pyabad.data_creation import hdf_creation as hdf
-from pyabad import utility
+from pyabad.data_creation import merge_data
+
 
 
 def file_walk(hdf_fname, rootDir, create_file=True):
@@ -83,6 +84,10 @@ def main():
     args = parser.parse_args()
     print('\n%s\n%s' % (args.hdf_fname, args.rootDir))
     file_walk(args.hdf_fname, args.rootDir)
+
+    for sensor_num in [7,13]:
+        merge_data.merge_main(sensor_num, hdf_file=args.hdf_fname)
+
 
 
 if __name__ == '__main__':
