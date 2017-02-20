@@ -20,21 +20,28 @@ def parallel_batch(df, n_workers=4):
     n_workers = n_workers
 
     pooledData = parallel_split(df, n_workers)
-    results = []
-    with Pool(processes=n_workers) as pool:
-        results = pool.map(ML.feature_creation, pooledData)
+    df_split = np.array_split(df, n_workers)
+    #results = []
+    #with Pool(processes=n_workers) as pool:
+    #    results = pool.map(ML.feature_creation, pooledData)
         #results.append(i)
-
+    pool = Pool(n_workers)
+    df = pd.concat(pool.map(ML.feature_creation, df_split))
+    pool.close()
     pool.join()
-    features = output_join(results)
-    return features
+    #features = output_join(results)
+    return df #features
 
-def configure_pipeline(sensor_num, n_workers=4, light_split=False, motion_split=False):
+
+def artefact_name(x):
+    return {"light":"Light","motion":"Motion",None:"All"}.get(x, 'INVALID')
+
+
+def configure_pipeline(sensor_num, n_workers=4, artefact_type=None ):
     dt = datetime.now()
     date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
     config = {"n_workers": n_workers,
-              "light_split": light_split,
-              "motion_split": motion_split,
+              "artefact_type": artefact_type,
               "date":date,
               "sensor_num":sensor_num,
               'target_name':['Control', 'Horizontal', 'Vertical', 'Pressure',
@@ -42,24 +49,29 @@ def configure_pipeline(sensor_num, n_workers=4, light_split=False, motion_split=
     return config
 
 def pipeline(df, config):
-    features = parallel_batch(df, config['n_workers'])
+    features = parallel_batch(ML.motion_light_split(df, config['artefact_type']), config['n_workers'])
+    artefact = artefact_name(config['artefact_type'])
     features.to_csv(os.path.join(DATAPATH,
                                  'df_%s' % config['sensor_num'],
-                                 'parallel_features_%s.csv' % config['sensor_num']))
+                                 'parallel_features_%s_%s.csv' % (config['sensor_num'], artefact)))
     split_data = ML.test_train_split(features)
     fpr, tpr, auroc, n_classes, clf = ML.classification(split_data[0])
     ML.ROC_plot(fpr, tpr, auroc, n_classes, config['date'], config['target_names'], config['sensor_num'], 'Training')
     fpr, tpr, auroc, n_classes = ML.final_test(split_data[1],clf)
     ML.ROC_plot(fpr, tpr, auroc, n_classes, config['date'], config['target_names'], config['sensor_num'], 'Test')
 
+    return True
+
 
 if __name__=='__main__':
     df_7 = pd.read_csv('data/raw_sensor_7.csv')
-    features_7 = parallel_batch(df_7, 7)
-    features_7.to_csv('~/Desktop/parallel_features_7.csv')
+    df_13 = pd.read_csv('data/raw_sensor_13.csv')
 
-    #df_13 = pd.read_csv('data/raw_sensor_13.csv')
-    #features_13 = parallel_batch(df_13, 7)
-    #features_13.to_csv('~/Desktop/parallel_features_13.csv')
+    config = configure_pipeline(7, n_workers=7)
+    pipeline(df_7, config)
 
+    config = configure_pipeline(7,n_workers=7, artefact_type='light')
+    pipeline(df_7, config)
 
+    config = configure_pipeline(7, n_workers=7, artefact_type='motion')
+    pipeline(df_7, config)
