@@ -4,7 +4,6 @@ import copy
 from sampen import sampen2
 from sklearn import metrics
 
-
 def ApEn(U, m, r):
     """
     Function for approximate entropy as per Wikipedia
@@ -38,36 +37,27 @@ def SampEn(X, verbose=False):
         print(sampen)
     return sampen[2][1]
 
-def trace_progress(func, progress=None):
-    def callf(*args, **kwargs):
-        if (progress is not None):
-            progress.send(None)
 
-        return func(*args, **kwargs)
 
-def AUC(X, coroutine):
+def AUC(X):
     """
     Function to return the area under a spectra
-    :param X: Pandas dataframe of raw sensor data.
-    :return: Pandas series of AUC for each spectra.
+    :param X: numpy array of raw spectral data.
+    :return: Numpy array of AUC for spectra.
     """
-    auc = X.apply(trace_progress(
-        np.trapz, progress=coroutine), raw=True, axis=1)
-    scaler = preprocessing.MinMaxScaler()
-    print('Normalising AUC')
-    return scaler.fit_transform(auc.reshape(-1, 1))
+    return np.trapz(X)
 
 
 def average_PSD(X_origin, plot=False):
     """
     Power spectral density of the bottom 1% of frequencies
     as a fraction of the whole.
-    :param X_origin: Pandas dataframe of spectra data
+    :param X_origin: Numpy array of data
     :param plot: Boolean stating whether FFT is to be plotted or not
     :return: x,y of the fourier if plotting, PSD if not
     """
     X = copy.deepcopy(X_origin)
-    N = X.shape[0]
+    N = len(X)  # X.shape[0]
     yf = sp_fft.rfft(X)
     xf = sp_fft.rfftfreq(N)
     psd = np.abs(yf)**2
@@ -78,10 +68,10 @@ def average_PSD(X_origin, plot=False):
         return PSD
 
 
-def autocorr(X):
+def autocorr(X, t=10):
     """
     Function to find autocorrelation values of spectra data.
-    :param X: Dataframe of raw spectra data
+    :param X: Numpy array.
     :return: Time series of autocorrelation data
     """
-    return X.apply(lambda x: x.autocorr(lag=1), axis=1)
+    return np.corrcoef(np.array([X[0:len(X)-t], X[t:len(X)]]))[0][1]

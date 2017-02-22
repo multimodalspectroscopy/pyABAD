@@ -15,6 +15,7 @@ import scipy
 
 from .feature_engineering import feature_engineering
 
+
 def data_separation(df):
     """
     Function to split a dataframe up into X, y and groups
@@ -27,10 +28,10 @@ def data_separation(df):
     return(X, y, groups)
 
 
-def feature_creation(df):
+def feature_creation(df, n_workers=1):
     X, y, groups = data_separation(df)
 
-    features = feature_engineering(X, y, groups)
+    features = feature_engineering(X, y, groups, n_workers)
 
     return features
 
@@ -61,18 +62,19 @@ def test_train_split(df):
 
 
 def motion_light_split(features, artefact=None):
-    if type(artefact)==str:
+    if type(artefact) == str:
         artefact = artefact.lower()
-    assert artefact in ['light', 'motion', None], 'Please provide a valid artefact type'
-    if artefact=='light':
+    assert artefact in ['light', 'motion',
+                        None], 'Please provide a valid artefact type'
+    if artefact == 'light':
         new_features = features.drop(
             features[features['Artefact'].isin({1, 2, 3, 4})].index, axis=0)
-    elif artefact=='motion':
+    elif artefact == 'motion':
         new_features = features.drop(
             features[features['Artefact'].isin({5, 6})].index, axis=0)
     else:
         print("No split required. \n")
-        new_features=features
+        new_features = features
 
     return new_features
 
@@ -173,7 +175,8 @@ def final_test(test, classifier):
     return fpr, tpr, auroc, n_classes
 
 
-def ROC_plot(fpr, tpr, auroc, n_classes, datetime, target_names, sensor_num, split_type):
+def ROC_plot(fpr, tpr, auroc, n_classes, datetime,
+             target_names, sensor_num, split_type):
     # Plot all ROC curves
     lw = 2
     plt.figure()
@@ -199,9 +202,9 @@ def ROC_plot(fpr, tpr, auroc, n_classes, datetime, target_names, sensor_num, spl
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Comparison of AUROC scores for each class of Artefact - Sensor %s (%s)' % (sensor_num, split_type))
-    plt.legend(loc="lower right")
-    plt.savefig("figures/ROC_Curve_%s" % datetime)
+    plt.title('Comparison of AUROC scores for each class of Artefact - Sensor %s (%s)' %
+              (sensor_num, split_type))
+    lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.savefig("figures/ROC_Curve_%s_%s" % (datetime, split_type),
+                bbox_extra_artists=(lgd,), bbox_inches='tight')
     # plt.show()
-
-
