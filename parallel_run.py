@@ -29,15 +29,15 @@ def artefact_name(x):
             None: "All"}.get(x, 'INVALID')
 
 
-def configure_pipeline(sensor_num, n_workers=4, artefact_type=None):
+def configure_pipeline(sensor_num, n_workers=4, artefact_type=None,
+                       targets=None):
     dt = datetime.now()
     date = "".join(filter(lambda char: char.isdigit(), str(dt)))[:14]
     config = {"n_workers": n_workers,
               "artefact_type": artefact_type,
               "date": date,
               "sensor_num": sensor_num,
-              'target_names': ['Control', 'Horizontal', 'Vertical', 'Pressure',
-                               'Frown', 'Ambient Light', 'Torch Light']}
+              'target_names': targets}
     return config
 
 
@@ -61,15 +61,19 @@ def pipeline(df, config):
 
 
 def main_run(df, sensor, n_workers):
-    config = configure_pipeline(sensor, n_workers=n_workers)
+    targets = targets = ['Control', 'Horizontal', 'Vertical', 'Pressure',
+                         'Frown', 'Ambient Light', 'Torch Light']
+    config = configure_pipeline(sensor, n_workers=n_workers, targets=targets)
     pipeline(df, config)
 
     config = configure_pipeline(sensor, n_workers=n_workers,
-                                artefact_type='light')
+                                artefact_type='light',
+                                targets=[targets[i] for i in [0, -2, -1]])
     pipeline(df, config)
 
     config = configure_pipeline(sensor, n_workers=n_workers,
-                                artefact_type='motion')
+                                artefact_type='motion',
+                                targets=targets[:-2])
     pipeline(df, config)
 
     return True
