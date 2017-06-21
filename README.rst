@@ -1,4 +1,4 @@
-pyABAD
+ABROAD
 ======
 
 This repository contains the code required to run the Automatic Broadband
