@@ -1,4 +1,4 @@
-pyabad package
+ABROAD package
 ==============
 
 Subpackages
@@ -6,23 +6,23 @@ Subpackages
 
 .. toctree::
 
-    pyabad.data_creation
+    abroad.data_creation
 
 Submodules
 ----------
 
-pyabad.file_walk module
+abroad.file_walk module
 -----------------------
 
-.. automodule:: pyabad.file_walk
+.. automodule:: abroad.file_walk
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyabad.machine_learning module
+abroad.machine_learning module
 ------------------------------
 
-.. automodule:: pyabad.machine_learning
+.. automodule:: abroad.machine_learning
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,7 +31,7 @@ pyabad.machine_learning module
 Module contents
 ---------------
 
-.. automodule:: pyabad
+.. automodule:: abroad
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import pyabad.machine_learning as ML
+import abroad.machine_learning as ML
 from multiprocessing import Pool, TimeoutError, cpu_count
 from datetime import datetime
 import os

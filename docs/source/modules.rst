@@ -1,7 +1,7 @@
-pyabad
+ABROAD
 ======
 
 .. toctree::
    :maxdepth: 4
 
-   pyabad
+   abroad

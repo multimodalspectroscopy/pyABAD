@@ -1,5 +1,5 @@
 import pandas as pd
-import pyabad.machine_learning as ML
+import abroad.machine_learning as ML
 from datetime import datetime
 import os
 DATAPATH = os.path.join('.', 'data')
