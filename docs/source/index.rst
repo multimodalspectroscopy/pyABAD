@@ -1,17 +1,17 @@
-.. pyABAD documentation master file, created by
+.. ABROAD documentation master file, created by
    sphinx-quickstart on Mon Jan 30 13:53:20 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyABAD's documentation!
+Welcome to ABROAD's documentation!
 ==================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   pyabad
-   pyabad.data_creation
+   abroad
+   abroad.data_creation
 
 Indices and tables
 ==================

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pyABAD documentation build configuration file, created by
+# ABROAD documentation build configuration file, created by
 # sphinx-quickstart on Mon Jan 30 13:53:20 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -49,7 +49,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pyABAD'
+project = u'ABROAD'
 copyright = u'2017, Joshua Russell-Buckland'
 author = u'Joshua Russell-Buckland'
 
@@ -103,7 +103,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pyABADdoc'
+htmlhelp_basename = 'ABROADdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -130,7 +130,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'pyABAD.tex', u'pyABAD Documentation',
+    (master_doc, 'ABROAD.tex', u'ABROAD Documentation',
      u'Joshua Russell-Buckland', 'manual'),
 ]
 
@@ -140,7 +140,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pyabad', u'pyABAD Documentation',
+    (master_doc, 'abroad', u'ABROAD Documentation',
      [author], 1)
 ]
 
@@ -151,8 +151,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'pyABAD', u'pyABAD Documentation',
-     author, 'pyABAD', 'One line description of project.',
+    (master_doc, 'ABROAD', u'ABROAD Documentation',
+     author, 'ABROAD', 'One line description of project.',
      'Miscellaneous'),
 ]
 

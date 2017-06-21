@@ -1,29 +1,29 @@
-pyabad.data_creation package
+abroad.data_creation package
 ============================
 
 Submodules
 ----------
 
-pyabad.data_creation.data_creation module
+abroad.data_creation.data_creation module
 -----------------------------------------
 
-.. automodule:: pyabad.data_creation.data_creation
+.. automodule:: abroad.data_creation.data_creation
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyabad.data_creation.hdf_creation module
+abroad.data_creation.hdf_creation module
 ----------------------------------------
 
-.. automodule:: pyabad.data_creation.hdf_creation
+.. automodule:: abroad.data_creation.hdf_creation
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyabad.data_creation.merge_data module
+abroad.data_creation.merge_data module
 --------------------------------------
 
-.. automodule:: pyabad.data_creation.merge_data
+.. automodule:: abroad.data_creation.merge_data
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ pyabad.data_creation.merge_data module
 Module contents
 ---------------
 
-.. automodule:: pyabad.data_creation
+.. automodule:: abroad.data_creation
     :members:
     :undoc-members:
     :show-inheritance:

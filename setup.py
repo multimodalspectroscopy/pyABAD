@@ -21,15 +21,15 @@ config = {
     'description': 'Automatic Broadband NIRS Artefact Detection',
     'long_description': readme,
     'author': 'Joshua Russell-Buckland',
-    'url': 'https://github.com/buck06191/pyABAD',
-    'download_url': 'https://github.com/buck06191/pyABAD/archive/master.zip',
+    'url': 'https://github.com/buck06191/ABROAD',
+    'download_url': 'https://github.com/buck06191/ABROAD/archive/master.zip',
     'author_email': 'joshua.russell-buckland.15@ucl.ac.uk',
     'version': '0.1.0',
     'license': license,
     'install_requires': required,
     'packages': package_list,
     'scripts': [],
-    'name': 'pyABAD'
+    'name': 'ABROAD'
 }
 
 setup(**config)

@@ -1,7 +1,7 @@
 import os
 import argparse
-from pyabad.data_creation import hdf_creation as hdf
-from pyabad.data_creation import merge_data
+from abroad.data_creation import hdf_creation as hdf
+from abroad.data_creation import merge_data
 
 
 
