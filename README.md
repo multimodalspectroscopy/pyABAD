@@ -1,4 +1,4 @@
-# pyABAD # [ARCHIVED REPO](https://img.shields.io/badge/pyabad-archived-lightgrey.svg)
+# pyABAD   ![ARCHIVED REPO](https://img.shields.io/badge/pyabad-archived-lightgrey.svg)
 
 
 This repository contains the code required to run the Automatic Broadband
